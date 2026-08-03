@@ -8,10 +8,22 @@ import io.micronaut.context.annotation.Factory;
 import io.micronaut.rabbitmq.connect.ChannelPool;
 import io.micronaut.runtime.Micronaut;
 import io.micronaut.serde.ObjectMapper;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.info.License;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.jspecify.annotations.NonNull;
 
+@OpenAPIDefinition(
+  info = @Info(
+    title = "ODA Paywall Service",
+    license = @License(
+      name = "AGPL-3.0",
+      url = "https://www.gnu.org/licenses/agpl-3.0.en.html"
+    )
+  )
+)
 @Factory
 public class Application {
 

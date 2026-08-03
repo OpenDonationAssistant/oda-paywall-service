@@ -1,0 +1,5 @@
+CREATE TABLE paywall_recipients (
+  id VARCHAR(255) PRIMARY KEY,
+  recipient_id VARCHAR(255) NOT NULL,
+  enabled BOOLEAN NOT NULL DEFAULT FALSE
+);

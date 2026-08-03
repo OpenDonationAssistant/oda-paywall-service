@@ -1,9 +1,10 @@
-package io.github.opendonationassistant.paywall;
+package io.github.opendonationassistant.paywall.webhook;
 
 import io.github.opendonationassistant.commons.Amount;
 import io.github.opendonationassistant.commons.logging.ODALogger;
 import io.github.opendonationassistant.history.command.AddHistoryItemCommand;
 import io.github.opendonationassistant.rabbit.RabbitClient;
+import io.github.opendonationassistant.repository.PaywallRecipientRepository;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
@@ -20,25 +21,38 @@ public class PaywallWebhook {
 
   private final ODALogger log = new ODALogger(this);
   private final RabbitClient commandsClient;
+  private final PaywallRecipientRepository recipients;
 
   @Inject
-  public PaywallWebhook(@Named("commands") RabbitClient commandsClient) {
+  public PaywallWebhook(
+    @Named("commands") RabbitClient commandsClient,
+    PaywallRecipientRepository recipients
+  ) {
     this.commandsClient = commandsClient;
+    this.recipients = recipients;
   }
 
-  @Post("/paywall/webhook/{recipientId}")
+  @Post("/paywall/webhook/{id}")
   public HttpResponse<String> handleWebhook(
-    String recipientId, @Body Map<String, String> params
+    String id, @Body Map<String, String> params
   ) {
     log.info(
       "Received Paywall webhook",
       Map.of(
-        "recipientId", recipientId,
+        "id", id,
         "type", params.get("type"),
         "paymentId", params.get("paymentId")
       )
     );
-    commandsClient.sendCommand(buildCommand(recipientId, params));
+    var recipient = recipients.get(id);
+    if (!recipient.enabled()) {
+      log.info(
+        "Recipient is not enabled, skipping event",
+        Map.of("id", id, "recipientId", recipient.recipientId())
+      );
+      return HttpResponse.ok("OK");
+    }
+    commandsClient.sendCommand(buildCommand(recipient.recipientId(), params));
     return HttpResponse.ok("OK");
   }
 
